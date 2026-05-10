@@ -1,0 +1,372 @@
+
+<style>
+#erd-wrap { padding: 8px 0; }
+#erd-wrap svg { width: 100% !important; }
+.legend { display:flex; flex-wrap:wrap; gap:10px; margin: 12px 0 8px; font-size:12px; color:var(--color-text-secondary); }
+.leg-item { display:flex; align-items:center; gap:5px; }
+.leg-dot { width:12px; height:12px; border-radius:3px; }
+.leg-trans { background:#7F77DD; }
+.leg-acad  { background:#1D9E75; }
+.leg-fin   { background:#BA7517; }
+.leg-rh    { background:#D85A30; }
+.leg-olap  { background:#378ADD; }
+</style>
+
+<div class="legend">
+  <span class="leg-item"><span class="leg-dot leg-trans"></span>Transversal</span>
+  <span class="leg-item"><span class="leg-dot leg-acad"></span>Acadêmico</span>
+  <span class="leg-item"><span class="leg-dot leg-fin"></span>Financeiro</span>
+  <span class="leg-item"><span class="leg-dot leg-rh"></span>Recursos Humanos</span>
+  <span class="leg-item"><span class="leg-dot leg-olap"></span>OLAP — Star Schema</span>
+</div>
+
+<div id="erd-wrap"></div>
+
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '12px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    primaryColor: dark ? '#3C3489' : '#EEEDFE',
+    primaryBorderColor: dark ? '#AFA9EC' : '#534AB7',
+    primaryTextColor: dark ? '#CECBF6' : '#26215C',
+  },
+});
+
+const diagram = `erDiagram
+
+  tb_pessoa {
+    int pk_id_pessoa PK
+    varchar tipo_pessoa
+    varchar primeiro_nome
+    varchar sobrenome
+    varchar cpf
+    date data_nascimento
+    varchar email
+    varchar status
+  }
+
+  tb_funcionario {
+    int pk_id_funcionario PK
+    int fk_id_pessoa FK
+    varchar cargo
+    varchar tipo_vinculo
+    decimal salario_base
+    date data_admissao
+    varchar status_funcionario
+  }
+
+  tb_professor {
+    int pk_id_professor PK
+    int fk_id_funcionario FK
+    varchar formacao_academica
+    varchar especialidade
+    decimal valor_hora_aula
+  }
+
+  tb_vinculo_prof_disciplina {
+    int pk_id_vinculo PK
+    int fk_id_professor FK
+    int fk_id_turma FK
+    int fk_id_disciplina FK
+    decimal carga_horaria_semanal
+    varchar status
+  }
+
+  tb_aluno {
+    int pk_id_aluno PK
+    int fk_id_pessoa FK
+    varchar rgm
+    date data_ingresso
+  }
+
+  tb_responsavel {
+    int fk_id_pessoa FK
+    int fk_id_aluno FK
+    varchar parentesco
+  }
+
+  tb_curso {
+    int pk_id_curso PK
+    varchar nome_curso
+    varchar nivel_ensino
+    int carga_horaria_total
+    varchar status
+  }
+
+  tb_turma {
+    int pk_id_turma PK
+    int fk_id_curso FK
+    varchar nome_turma
+    int ano_letivo
+    varchar turno
+    int capacidade_maxima
+    varchar status
+  }
+
+  tb_disciplina {
+    int pk_id_disciplina PK
+    int fk_id_curso FK
+    varchar nome_disciplina
+    int carga_horaria
+    varchar status
+  }
+
+  tb_grade_curricular {
+    int fk_id_turma FK
+    int fk_id_disciplina FK
+    decimal carga_horaria_semanal
+    varchar status
+  }
+
+  tb_parametro_avaliacao {
+    int pk_id_parametro PK
+    int fk_id_curso FK
+    varchar descricao
+    decimal peso
+    int ordem
+    int ano_letivo
+  }
+
+  tb_matricula {
+    int pk_id_matricula PK
+    int fk_id_aluno FK
+    int fk_id_turma FK
+    date data_matricula
+    varchar status_matricula
+  }
+
+  tb_nota {
+    int pk_id_nota PK
+    int fk_id_matricula FK
+    int fk_id_turma FK
+    int fk_id_disciplina FK
+    int fk_id_parametro FK
+    decimal valor_nota
+    varchar status_aprovacao
+  }
+
+  tb_frequencia {
+    int pk_id_frequencia PK
+    int fk_id_matricula FK
+    int fk_id_turma FK
+    int fk_id_disciplina FK
+    date data_aula
+    varchar status_presenca
+  }
+
+  tb_calendario_letivo {
+    int pk_id_calendario PK
+    int fk_id_turma FK
+    date data
+    varchar tipo
+    varchar descricao
+  }
+
+  tb_historico_status_matricula {
+    int pk_id_historico PK
+    int fk_id_matricula FK
+    int fk_id_funcionario FK
+    varchar status_anterior
+    varchar status_novo
+    timestamp data_alteracao
+  }
+
+  tb_documento_aluno {
+    int pk_id_documento PK
+    int fk_id_aluno FK
+    varchar tipo_documento
+    varchar caminho_arquivo
+    varchar status
+  }
+
+  tb_ocorrencia_disciplinar {
+    int pk_id_ocorrencia PK
+    int fk_id_aluno FK
+    int fk_id_funcionario FK
+    varchar tipo
+    date data_ocorrencia
+    boolean ciencia_responsavel
+  }
+
+  tb_contrato_educacional {
+    int pk_id_contrato PK
+    int fk_id_matricula FK
+    int fk_id_responsavel_pessoa FK
+    int fk_id_responsavel_aluno FK
+    decimal valor_mensalidade
+    decimal desconto_percentual
+    int total_parcelas
+    varchar status_contrato
+  }
+
+  tb_mensalidade {
+    int pk_id_mensalidade PK
+    int fk_id_contrato FK
+    int numero_parcela
+    date data_vencimento
+    decimal valor_original
+    decimal valor_desconto
+    varchar status_mensalidade
+  }
+
+  tb_pagamento {
+    int pk_id_pagamento PK
+    int fk_id_mensalidade FK
+    date data_pagamento
+    decimal valor_pago
+    varchar forma_pagamento
+    varchar comprovante
+  }
+
+  tb_inadimplencia {
+    int pk_id_inadimplencia PK
+    int fk_id_contrato FK
+    int qtd_mensalidades_atraso
+    date data_primeiro_atraso
+    varchar status_negociacao
+  }
+
+  tb_conta_pagar {
+    int pk_id_conta_pagar PK
+    int fk_id_vinculo FK
+    int fk_id_funcionario FK
+    varchar descricao
+    decimal valor
+    date data_vencimento
+    varchar status_pagamento
+    varchar tipo_provento
+  }
+
+  dim_tempo {
+    int sk_tempo PK
+    date data_completa
+    int dia
+    int mes
+    int ano
+    int trimestre
+    varchar nome_mes
+    boolean eh_fim_semana
+  }
+
+  dim_aluno {
+    int sk_aluno PK
+    int nk_id_aluno
+    varchar nome_completo
+    varchar rgm
+    varchar faixa_etaria
+    varchar status_aluno
+  }
+
+  dim_curso {
+    int sk_curso PK
+    int nk_id_curso
+    varchar nome_curso
+    varchar nivel_ensino
+  }
+
+  dim_turma {
+    int sk_turma PK
+    int nk_id_turma
+    varchar nome_turma
+    varchar turno
+    int ano_letivo
+  }
+
+  dim_forma_pagamento {
+    int sk_forma PK
+    varchar forma_pagamento
+  }
+
+  fato_pagamento {
+    int sk_fato PK
+    int fk_tempo FK
+    int fk_aluno FK
+    int fk_curso FK
+    int fk_turma FK
+    int fk_forma FK
+    decimal valor_pago
+    decimal valor_mensalidade
+    int numero_parcela
+    varchar status_mensalidade
+  }
+
+  tb_pessoa ||--o{ tb_funcionario : "possui"
+  tb_pessoa ||--o{ tb_aluno : "é"
+  tb_pessoa ||--o{ tb_responsavel : "é responsável"
+  tb_funcionario ||--o| tb_professor : "é professor"
+  tb_professor ||--o{ tb_vinculo_prof_disciplina : "ministra"
+  tb_aluno }o--o{ tb_responsavel : "tem responsável"
+  tb_aluno ||--o{ tb_matricula : "realiza"
+  tb_aluno ||--o{ tb_documento_aluno : "possui"
+  tb_aluno ||--o{ tb_ocorrencia_disciplinar : "registra"
+  tb_curso ||--o{ tb_turma : "possui"
+  tb_curso ||--o{ tb_disciplina : "possui"
+  tb_curso ||--o{ tb_parametro_avaliacao : "define"
+  tb_turma }o--o{ tb_grade_curricular : "compõe"
+  tb_turma ||--o{ tb_matricula : "recebe"
+  tb_turma ||--o{ tb_calendario_letivo : "possui"
+  tb_disciplina }o--o{ tb_grade_curricular : "compõe"
+  tb_grade_curricular ||--o{ tb_nota : "avalia"
+  tb_grade_curricular ||--o{ tb_frequencia : "registra"
+  tb_grade_curricular ||--o{ tb_vinculo_prof_disciplina : "vincula"
+  tb_parametro_avaliacao ||--o{ tb_nota : "período"
+  tb_matricula ||--|| tb_contrato_educacional : "gera"
+  tb_matricula ||--o{ tb_nota : "recebe"
+  tb_matricula ||--o{ tb_frequencia : "tem"
+  tb_matricula ||--o{ tb_historico_status_matricula : "registra"
+  tb_responsavel ||--o{ tb_contrato_educacional : "assina"
+  tb_contrato_educacional ||--o{ tb_mensalidade : "gera"
+  tb_contrato_educacional ||--o| tb_inadimplencia : "pode ter"
+  tb_mensalidade ||--o{ tb_pagamento : "recebe"
+  tb_vinculo_prof_disciplina ||--o{ tb_conta_pagar : "gera"
+  tb_funcionario ||--o{ tb_conta_pagar : "recebe"
+  tb_funcionario ||--o{ tb_historico_status_matricula : "altera"
+  tb_funcionario ||--o{ tb_ocorrencia_disciplinar : "registra"
+  dim_tempo ||--o{ fato_pagamento : "quando"
+  dim_aluno ||--o{ fato_pagamento : "quem"
+  dim_curso ||--o{ fato_pagamento : "curso"
+  dim_turma ||--o{ fato_pagamento : "turma"
+  dim_forma_pagamento ||--o{ fato_pagamento : "como"
+`;
+
+try {
+  const { svg } = await mermaid.render('erd-svg', diagram);
+  document.getElementById('erd-wrap').innerHTML = svg;
+
+  document.querySelectorAll('#erd-wrap svg .node').forEach(node => {
+    const firstPath = node.querySelector('path[d]');
+    if (!firstPath) return;
+    const d = firstPath.getAttribute('d');
+    const nums = d.match(/-?[\d.]+/g)?.map(Number);
+    if (!nums || nums.length < 8) return;
+    const xs = [nums[0], nums[2], nums[4], nums[6]];
+    const ys = [nums[1], nums[3], nums[5], nums[7]];
+    const x = Math.min(...xs), y = Math.min(...ys);
+    const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x); rect.setAttribute('y', y);
+    rect.setAttribute('width', w); rect.setAttribute('height', h);
+    rect.setAttribute('rx', '8');
+    for (const a of ['fill','stroke','stroke-width','class','style']) {
+      if (firstPath.hasAttribute(a)) rect.setAttribute(a, firstPath.getAttribute(a));
+    }
+    firstPath.replaceWith(rect);
+  });
+
+  document.querySelectorAll('#erd-wrap svg .row-rect-odd path, #erd-wrap svg .row-rect-even path').forEach(p => {
+    p.setAttribute('stroke', 'none');
+  });
+} catch(e) {
+  document.getElementById('erd-wrap').innerHTML = '<p style="color:var(--color-text-danger);padding:16px">Erro ao renderizar: ' + e.message + '</p>';
+}
+</script>
